@@ -22,6 +22,16 @@ typedef uint64_t CData;
 //typedef vluint64_t   QData;     ///< Verilated pack data, 33-64 bits
 //typedef vluint32_t   EData;     ///< Verilated pack element of WData array
 //typedef EData        WData;     ///< Verilated pack data, >64 bits, as an array
+
+/* version 5.010
+using CData = uint8_t;    ///< Data representing 'bit' of 1-8 packed bits
+using SData = uint16_t;   ///< Data representing 'bit' of 9-16 packed bits
+using IData = uint32_t;   ///< Data representing 'bit' of 17-32 packed bits
+using QData = uint64_t;   ///< Data representing 'bit' of 33-64 packed bits
+using EData = uint32_t;   ///< Data representing one element of WData array
+using WData = EData;        ///< Data representing >64 packed bits (used as pointer)
+*/
+
 class Signal
 {
     public:
@@ -33,7 +43,7 @@ class Signal
         void setValue(uint64_t value)  {*raw = value; }
 };
 
-//模拟dut
+// 模拟 dut
 class VMyTopLevel
 {
     public:
@@ -129,7 +139,6 @@ uint64_t getValue(Wrapper* handle, int id)
 bool eval(Wrapper* handle)
 {
     handle->top.eval();
-    handle->time ++;
     std::cout<<"time:"<<handle->time<<std::endl;
     return true;
 //    return Verilated::gotFinish();
@@ -163,7 +172,8 @@ void disableWave(Wrapper *handle)
     handle->waveEnabled = false;
 }
 
-//定义Python与C++之间交互的func与class
+// creating Python bindings
+// 定义Python与C++之间交互的func与class
 PYBIND11_MODULE(example, m)
 {
     py::class_<Wrapper>(m, "Wrapper")

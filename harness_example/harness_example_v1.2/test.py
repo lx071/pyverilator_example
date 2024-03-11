@@ -44,10 +44,12 @@ def test(dut):
             else:
                 setValue(dut, "clk", 0)
         example.eval(dut)
-        main_time = main_time + 1
+        example.sleep_cycles(dut, 5)
+        main_time = main_time + 5
 
 
 def basic_test(dut):
+    print("=======")
     example.setValue(dut, 0, 11)
     example.setValue(dut, 1, 12)
     example.setValue(dut, 3, 0)
@@ -56,6 +58,7 @@ def basic_test(dut):
     for i in range(5):
         value = example.getValue(dut, i)
         print(value)
+    print("=======")
     example.setValue(dut, 0, 12)
     example.setValue(dut, 1, 13)
     example.setValue(dut, 3, 1)
@@ -64,6 +67,7 @@ def basic_test(dut):
     for i in range(5):
         value = example.getValue(dut, i)
         print(value)
+    print("=======")
     example.setValue(dut, 0, 13)
     example.setValue(dut, 1, 14)
     example.setValue(dut, 3, 0)
@@ -72,11 +76,12 @@ def basic_test(dut):
     for i in range(5):
         value = example.getValue(dut, i)
         print(value)
+    print("=======")
 
 
 if __name__ == '__main__':
 
     dut = example.getHandle('add_dut')
-    basic_test(dut)
-    # test(dut)
+    # basic_test(dut)
+    test(dut)
     example.deleteHandle(dut)

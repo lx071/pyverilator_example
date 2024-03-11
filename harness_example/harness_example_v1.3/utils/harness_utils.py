@@ -73,8 +73,6 @@ namespace py = pybind11;
 #endif
 #include "V{dut_name}__Syms.h"
 
-//8个字节
-//typedef uint64_t CData;
 
 //usr/local/share/verilator/include/verilated.h
 //typedef vluint8_t    CData;     ///< Verilated pack data, 1-8 bits
@@ -83,10 +81,20 @@ namespace py = pybind11;
 //typedef vluint64_t   QData;     ///< Verilated pack data, 33-64 bits
 //typedef vluint32_t   EData;     ///< Verilated pack element of WData array
 //typedef EData        WData;     ///< Verilated pack data, >64 bits, as an array
+
+/* version 5.010
+using CData = uint8_t;    ///< Data representing 'bit' of 1-8 packed bits
+using SData = uint16_t;   ///< Data representing 'bit' of 9-16 packed bits
+using IData = uint32_t;   ///< Data representing 'bit' of 17-32 packed bits
+using QData = uint64_t;   ///< Data representing 'bit' of 33-64 packed bits
+using EData = uint32_t;   ///< Data representing one element of WData array
+using WData = EData;        ///< Data representing >64 packed bits (used as pointer)
+*/
+
 class Signal
 {{
     public:
-        //指针指向信号值
+        // 指针指向信号值
         CData* raw;
         Signal(CData *raw) : raw(raw){{}}
         Signal(CData &raw) : raw(std::addressof(raw)){{}}
@@ -193,7 +201,8 @@ void disableWave(Wrapper *handle)
     handle->waveEnabled = false;
 }}
 
-//定义Python与C++之间交互的func与class
+// creating Python bindings
+// 定义Python与C++之间交互的func与class
 PYBIND11_MODULE(wrapper, m)
 {{
     py::class_<Wrapper>(m, "Wrapper")
@@ -305,7 +314,8 @@ def simple_sim_test():
                 else:
                     setValue(dut, "clk", 0)
             wrapper.eval(dut)
-            main_time = main_time + 1
+            wrapper.sleep_cycles(dut, 5)
+            main_time = main_time + 5
     dut = wrapper.getHandle('add_dut')
     test(dut)
     wrapper.deleteHandle(dut)

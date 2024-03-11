@@ -79,8 +79,6 @@ namespace py = pybind11;
 #endif
 #include "V{dut_name}__Syms.h"
 
-//8个字节
-//typedef uint64_t CData;
 
 //usr/local/share/verilator/include/verilated.h
 //typedef vluint8_t    CData;     ///< Verilated pack data, 1-8 bits
@@ -89,6 +87,16 @@ namespace py = pybind11;
 //typedef vluint64_t   QData;     ///< Verilated pack data, 33-64 bits
 //typedef vluint32_t   EData;     ///< Verilated pack element of WData array
 //typedef EData        WData;     ///< Verilated pack data, >64 bits, as an array
+
+/* version 5.010
+using CData = uint8_t;    ///< Data representing 'bit' of 1-8 packed bits
+using SData = uint16_t;   ///< Data representing 'bit' of 9-16 packed bits
+using IData = uint32_t;   ///< Data representing 'bit' of 17-32 packed bits
+using QData = uint64_t;   ///< Data representing 'bit' of 33-64 packed bits
+using EData = uint32_t;   ///< Data representing one element of WData array
+using WData = EData;        ///< Data representing >64 packed bits (used as pointer)
+*/
+
 class Signal
 {{
     public:
@@ -106,7 +114,7 @@ thread_local Wrapper *simHandle1;
 class Wrapper
 {{
     public:
-        //当前时间
+        // 当前时间
         uint64_t time;
         std::string name;
         int clk_id;
@@ -186,7 +194,7 @@ bool eval()
     return Verilated::gotFinish();
 }}
 
-//根据当前时间产生时钟信号
+// 根据当前时间产生时钟信号
 void gen_clk()
 {{
     uint64_t time = simHandle1->time;
@@ -202,7 +210,7 @@ void gen_clk()
     }}
 }}
 
-//设置时钟信号的信息
+// 设置时钟信号的信息
 void set_clk_info(int id, uint64_t cycles)
 {{
     simHandle1->clk_id = id;
@@ -250,8 +258,8 @@ void doPythonApi()
     utils.attr("do_python_api")();
 }}
 
-
-//定义Python与C++之间交互的func与class
+// creating Python bindings
+// 定义Python与C++之间交互的func与class
 PYBIND11_MODULE(wrapper, m)
 {{
     py::class_<Wrapper>(m, "Wrapper")

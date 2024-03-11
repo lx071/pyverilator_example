@@ -11,8 +11,6 @@ namespace py = pybind11;
 #endif
 #include "VMyTopLevel__Syms.h"
 
-//8个字节
-//typedef uint64_t CData;
 
 //usr/local/share/verilator/include/verilated.h
 //typedef vluint8_t    CData;     ///< Verilated pack data, 1-8 bits
@@ -21,6 +19,16 @@ namespace py = pybind11;
 //typedef vluint64_t   QData;     ///< Verilated pack data, 33-64 bits
 //typedef vluint32_t   EData;     ///< Verilated pack element of WData array
 //typedef EData        WData;     ///< Verilated pack data, >64 bits, as an array
+
+/* version 5.010
+using CData = uint8_t;    ///< Data representing 'bit' of 1-8 packed bits
+using SData = uint16_t;   ///< Data representing 'bit' of 9-16 packed bits
+using IData = uint32_t;   ///< Data representing 'bit' of 17-32 packed bits
+using QData = uint64_t;   ///< Data representing 'bit' of 33-64 packed bits
+using EData = uint32_t;   ///< Data representing one element of WData array
+using WData = EData;        ///< Data representing >64 packed bits (used as pointer)
+*/
+
 class Signal
 {
     public:
@@ -101,11 +109,6 @@ uint64_t getValue(Wrapper* handle, int id)
 bool eval(Wrapper* handle)
 {
     handle->top.eval();
-//    std::cout<<"time:"<<handle->time<<std::endl;
-    #ifdef TRACE
-    if(handle->waveEnabled) handle->tfp.dump((uint64_t)handle->time);
-    #endif
-    handle->time ++;
     return Verilated::gotFinish();
 }
 
@@ -137,7 +140,8 @@ void disableWave(Wrapper *handle)
     handle->waveEnabled = false;
 }
 
-//定义Python与C++之间交互的func与class
+// creating Python bindings
+// 定义Python与C++之间交互的func与class
 PYBIND11_MODULE(example, m)
 {
     py::class_<Wrapper>(m, "Wrapper")

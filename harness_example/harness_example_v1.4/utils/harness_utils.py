@@ -73,8 +73,6 @@ namespace py = pybind11;
 #endif
 #include "V{dut_name}__Syms.h"
 
-//8个字节
-//typedef uint64_t CData;
 
 //usr/local/share/verilator/include/verilated.h
 //typedef vluint8_t    CData;     ///< Verilated pack data, 1-8 bits
@@ -83,10 +81,20 @@ namespace py = pybind11;
 //typedef vluint64_t   QData;     ///< Verilated pack data, 33-64 bits
 //typedef vluint32_t   EData;     ///< Verilated pack element of WData array
 //typedef EData        WData;     ///< Verilated pack data, >64 bits, as an array
+
+/* version 5.010
+using CData = uint8_t;    ///< Data representing 'bit' of 1-8 packed bits
+using SData = uint16_t;   ///< Data representing 'bit' of 9-16 packed bits
+using IData = uint32_t;   ///< Data representing 'bit' of 17-32 packed bits
+using QData = uint64_t;   ///< Data representing 'bit' of 33-64 packed bits
+using EData = uint32_t;   ///< Data representing one element of WData array
+using WData = EData;        ///< Data representing >64 packed bits (used as pointer)
+*/
+
 class Signal
 {{
     public:
-        //指针指向信号值
+        // 指针指向信号值
         CData* raw;
         Signal(CData *raw) : raw(raw){{}}
         Signal(CData &raw) : raw(std::addressof(raw)){{}}
@@ -95,6 +103,7 @@ class Signal
 }};
 
 class Wrapper;
+// 线程局部变量
 thread_local Wrapper *simHandle1;
 
 class Wrapper
@@ -200,7 +209,8 @@ void disableWave()
     simHandle1->waveEnabled = false;
 }}
 
-//定义Python与C++之间交互的func与class
+// creating Python bindings
+// 定义Python与C++之间交互的func与class
 PYBIND11_MODULE(wrapper, m)
 {{
     py::class_<Wrapper>(m, "Wrapper")
@@ -281,19 +291,19 @@ def simple_sim_test():
 
     signal_id = {'io_A': 0, 'io_B': 1, 'clk': 2, 'reset': 3, 'io_X': 4}
 
-    def setValue(dut, signal_name, value):
-        wrapper.setValue(dut, signal_id[signal_name], value)
+    def setValue(signal_name, value):
+        wrapper.setValue(signal_id[signal_name], value)
 
-    def getValue(dut, signal_name):
-        return wrapper.getValue(dut, signal_id[signal_name])
+    def getValue(signal_name):
+        return wrapper.getValue(signal_id[signal_name])
 
-    def assign(dut, num):
-        setValue(dut, "io_A", num % 200)
-        setValue(dut, "io_B", num % 200)
+    def assign(num):
+        setValue("io_A", num % 200)
+        setValue("io_B", num % 200)
 
-    def test(dut):
-        setValue(dut, "clk", 0)
-        setValue(dut, "reset", 1)
+    def test():
+        setValue("clk", 0)
+        setValue("reset", 1)
         main_time = 0
         num = 0
         reset_value = 1
@@ -301,21 +311,22 @@ def simple_sim_test():
             if num >= 10000:
                 break
             if main_time == 100:
-                setValue(dut, "reset", 0)
+                setValue("reset", 0)
             if reset_value == 1:
-                reset_value = getValue(dut, "reset")
+                reset_value = getValue("reset")
             if reset_value == 0 and main_time % 5 == 0:
-                if getValue(dut, "clk") == 0:
-                    setValue(dut, "clk", 1)
-                    assign(dut, num)
+                if getValue("clk") == 0:
+                    setValue("clk", 1)
+                    assign(num)
                     num = num + 1
                 else:
-                    setValue(dut, "clk", 0)
-            wrapper.eval(dut)
+                    setValue("clk", 0)
+            wrapper.eval()
+            wrapper.sleep_cycles(5)
             main_time = main_time + 1
-    dut = wrapper.getHandle('add_dut')
-    test(dut)
-    wrapper.deleteHandle(dut)
+    wrapper.getHandle('add_dut')
+    test()
+    wrapper.deleteHandle()
 
 
 if __name__ == '__main__':

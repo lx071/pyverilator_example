@@ -1,18 +1,17 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+#include <stdint.h>
+#include <iostream>
+#include <string>
 
-#include<stdint.h>
-#include<iostream>
-#include<string>
-
-//8个字节
+// 8个字节
 typedef uint64_t CData;
 
 class Signal
 {
     public:
-        //指针指向信号值
+        // 指针指向信号值
         CData* raw;
         Signal(CData *raw) : raw(raw){}
         Signal(CData &raw) : raw(std::addressof(raw)){}
@@ -20,7 +19,7 @@ class Signal
         void setValue(uint64_t value)  {*raw = value; }
 };
 
-//模拟dut
+// 模拟 dut
 class VMyTopLevel
 {
     public:
@@ -93,7 +92,8 @@ bool eval(Wrapper* handle)
 //    return Verilated::gotFinish();
 }
 
-//定义Python与C++之间交互的func与class
+// creating Python bindings
+// 定义Python与C++之间交互的func与class
 PYBIND11_MODULE(example, m)
 {
     py::class_<Wrapper>(m, "Wrapper")
