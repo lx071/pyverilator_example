@@ -4,16 +4,6 @@ from utils.harness_utils import sim
 import time
 import random
 
-
-def do_python_test():
-    sys.path.append('utils')
-    print(sys.path)
-    s = sim('./hdl/', 'ALU.v')
-    time1 = time.time()
-    s.doPythonApi()
-    time2 = time.time()
-    print('time:', time2-time1)
-
 """
     input clk;
     input rst;
@@ -74,6 +64,5 @@ def alu_test():
 
 if __name__ == '__main__':
     alu_test()
-    # do_python_test()
     pass
 

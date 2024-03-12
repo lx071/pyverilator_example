@@ -66,10 +66,10 @@ def verilog_parse(dut_path, top_module_file_name):
 
 
 # 传入文件路径和端口名列表，生成 Wrapper文件
-def genWrapperCpp(ports_name, ports_width, top_module_file_name):
+def genWrapperCpp(ports_name, ports_width, top_module_file_name, sim_folder):
     dut_name = top_module_file_name.split('.')[0]  # 模块名
     try:
-        os.mkdir("simulation")
+        os.mkdir(sim_folder)
     except FileExistsError:
         pass
 
@@ -321,13 +321,13 @@ PYBIND11_MODULE(wrapper, m)
 }}
 
 """
-    fd = open(f'simulation/{dut_name}-harness.cpp', "w")
+    fd = open(f'{sim_folder}/{dut_name}-harness.cpp', "w")
     fd.write(wrapper)
     fd.close()
 
 
 
-def runCompile(dut_path, top_module_file_name):
+def runCompile(dut_path, top_module_file_name, sim_folder):
     
     print("\n\n---------------------verilator build info--------------------------\n")
 
@@ -335,7 +335,7 @@ def runCompile(dut_path, top_module_file_name):
 
     # 在当前目录创建simulation文件夹
     try:
-        os.mkdir("simulation")
+        os.mkdir(sim_folder)
     except FileExistsError:
         pass
     
@@ -343,7 +343,7 @@ def runCompile(dut_path, top_module_file_name):
         dut_path = dut_path + '/'
 
     # 把所有dut文件复制到simulation文件夹下
-    os.system("cp {}* ./simulation/".format(dut_path))
+    os.system("cp {}* ./{}/".format(dut_path, sim_folder))
 
     # vfn = "{}.v".format(self.dut_name)              # {dut_name}.v
     vfn = top_module_file_name
@@ -352,7 +352,7 @@ def runCompile(dut_path, top_module_file_name):
     efn = "V{}".format(dut_name)  # V{dut_name}
 
     # 改变当前工作目录到指定的路径--simulation
-    os.chdir("./simulation")
+    os.chdir(f"./{sim_folder}")
 
     pybind_i = subprocess.getoutput('python3 -m pybind11 --includes')
     pybind_CFLAGS = pybind_i.replace(' ', ' -CFLAGS ')
@@ -369,23 +369,28 @@ def runCompile(dut_path, top_module_file_name):
     os.system(compile_command_2)
     os.system(compile_command_3)
 
-    os.chdir("../")
+    # os.chdir("../")
 
+import importlib
 
 class sim:
-    def __init__(self, dut_path, top_module_file_name):
+    def __init__(self, dut_path, top_module_file_name, sim_folder='simulation'):
         input_ports_name, output_ports_name, ports_width = verilog_parse(dut_path, top_module_file_name)
         print('in:', input_ports_name)
         print('out:', output_ports_name)
         ports_name = input_ports_name + output_ports_name
         list_n = [i for i in range(len(ports_name))]
         self.signal_id = dict(zip(ports_name, list_n))
-        # print(self.signal_id)
+
         self.dut_path = dut_path
-        genWrapperCpp(ports_name, ports_width, top_module_file_name)
-        runCompile(dut_path, top_module_file_name)
+        print("sim_folder:", sim_folder)
+        genWrapperCpp(ports_name, ports_width, top_module_file_name, sim_folder)
+        runCompile(dut_path, top_module_file_name, sim_folder)
         # print(os.getcwd())
-        from simulation.verilator import wrapper
+
+        # 动态导入包
+        wrapper = importlib.import_module(sim_folder + '.verilator.wrapper')
+
         self.wp = wrapper
         self.getHandle('sim_wrapper')
 
