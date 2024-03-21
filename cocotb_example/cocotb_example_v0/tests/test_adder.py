@@ -131,6 +131,7 @@ async def adder_basic_test(dut):
 
     await FallingEdge(dut.reset_i)
 
+    print("XXXX")
     t = Top(env, 'top', dut)
 
     # 仿真运行 env 中的 process
